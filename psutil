@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+
+import psutil
+import optparse
+
+def get_options():
+    usage = "usage: %prog [options]"
+    OptionParser=optparse.OptionParser
+    parser=OptionParser(usage)
+
+    parser.add_option("-c","--cpu",action="store_true",dest="cpu",\
+                    default=False,help="Get CPU Information")
+    parser.add_option("-m","--mem",action="store_true",dest="mem",\
+                    default=False,help="Get MEM Information")
+    parser.add_option("-d","--disk",action="store_true",dest="disk",\
+                    default=False,help="Get DISK Information")
+    parser.add_option("-n","--net",action="store_true",dest="net",\
+                    default=False,help="Get NET Information")
+    parser.add_option("-p","--pid",action="store_true",dest="pid",\
+                    default=False,help="Get PID Information")
+    parser.add_option("-u","--user",action="store_true",dest="user",\
+                    default=False,help="Get USER Infotmaiton")
+
+    options,args=parser.parse_args()
+
+    return options,args
+def errmsg(msg):
+    sys.stderr.write(msg+"\n")
+    sys.exit(-1)
+
+if __name__=="__main__":
+    options,args = get_options()
+    cpu=options.cpu
+    mem=options.mem
+    disk=options.disk
+    net=options.net 
+    pid=options.pid
+    user=options.user
+#    print cpu,mem,disk,pid,user
+    if cpu:
+        print "CPU Information"      
+        print "user    %s" % psutil.cpu_times().user
+        print "nice    %s" % psutil.cpu_times().nice
+        print "system  %s" % psutil.cpu_times().system
+        print "idle    %s" % psutil.cpu_times().idle
+        print "iowait  %s" % psutil.cpu_times().iowait
+        print "irq     %s" % psutil.cpu_times().irq
+        print "softirq %s" % psutil.cpu_times().softirq
+        print "steal   %s" % psutil.cpu_times().steal
+        print "guest   %s" % psutil.cpu_times().guest
+    
+        print "CPU COUNT(Logical) %s" % psutil.cpu_count()
+        print "CPU COUNT(Physics) %s" % psutil.cpu_count(logical=False)
+
+    if mem:
+        print "mem Information"
+        print type(psutil.virtual_memory())
+        print "total        %s" % psutil.virtual_memory().total
+        print "available    %s" % psutil.virtual_memory().available
+        print "percent      %s" % psutil.virtual_memory().percent
+        print "used         %s" % psutil.virtual_memory().used
+        print "free         %s" % psutil.virtual_memory().free
+        print "active       %s" % psutil.virtual_memory().active
+        print "inactive     %s" % psutil.virtual_memory().inactive
+        print "buffers      %s" % psutil.virtual_memory().buffers
+        print "cached       %s" % psutil.virtual_memory().cached
+    if disk:
+        print "disk Information"
+        for device in psutil.disk_partitions():
+            print device,psutil.disk_usage(device.device)
+        print "IO number of hard drive"
+        print psutil.disk_io_counters()
+        print "Single partition IO number"
+        for key,value in  psutil.disk_io_counters(perdisk=True).iteritems():
+            print key,value
+
+    if net:
+        print "net Information"
+        print "System network general information"
+        print psutil.net_io_counters()
+        print "Detailed information on a single network interface"
+        for key,value in  psutil.net_io_counters(pernic=True).iteritems():
+            print key,value
+    if user:
+        print "user Information"
+        print psutil.users()
+    if pid:
+        print "Process Information"
+        print psutil.pids()
+        pid=int(raw_input("Please Input Process ID:"))
+        p=psutil.Process(pid)
+        print "Process Name     %s" % p.name()
+        print "Path Bin         %s" % p.exe()
+        print "Word Dir         %s" % p.cwd()
+        print "Process Stat     %s" % p.status()
+        print "All Time         %s" % p.create_time()
+        print "Process UID      %s" % p.uids()
+#        print "Process GID      %s" % p.gids()
+#        print "Process CPU Time %s" % p.cpu_times()
+#        print "Process Mme used %s" % p.memory_percent()
+#        print "rss vms          %s" % p.memory_info()
+#        print "io information   %s" % p.io_counters()
+#        print "socket           %s" % p.connections()
+#        print "num of thread    %s" % p.num_threads()
