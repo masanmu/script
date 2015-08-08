@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+
+import re
+import urllib2
+import urllib
+import cookielib
+import smtplib
+import string
+import sys
+import time
+import optparse
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from core import ZabbixAPI
+
+
+username="zabbix server user"
+password="your zabbix password"
+zabbix_server="your zabbix server"
+
+def addimg(src,imgid):
+    fp=open(src,"rb")
+    msgImage=MIMEImage(fp.read())
+    fp.close()
+    msgImage.add_header('Content-ID',imgid)
+    return msgImage
+
+def getpic(host,key):
+    cur_time=time.strftime("%Y%m%d%H%M%S",time.localtime())
+    zabbix="http://%s/zabbix" % zabbix_server
+    zapi=ZabbixAPI(zabbix,username,password)
+    hostid=zapi.host.get({"filter":{"host":[host]}})[0]["hostid"]
+    itemid=zapi.item.get({"output":"extend","hostids":hostid,"search":{"key_":key}})[0]['itemid']
+    
+    login_opt = urllib.urlencode({
+    "name":username,
+    "password":password,
+    "autologin":1,
+    "enter":"Sign in"})
+    try:
+        cj=cookielib.CookieJar()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        login_url=r"http://%s/zabbix/index.php" % zabbix_server
+        save_graph_url=r"http://%s/zabbix/chart.php?itemid=&period=3600&stime=%s&updateProfile=1&profileIdx=web.item.graph&profileIdx2=10963448&sid=483cf6d2e71ac787&width=1098&curtime=1439006186797.png" % (zabbix_server,itemid,cur_time)
+        opener.open(login_url,login_opt).read()
+        data=opener.open(save_graph_url).read()
+        filename="test.png"
+        with open(filename,"wb") as f:
+            f.write(data)
+        return filename
+    except Exception as e:
+        print str(e)
+        return error
+
+def usage():
+    usage = "usage: python %prog zabbix_server subject content"
+    OptionParser = optparse.OptionParser
+    parser = OptionParser(usage)
+    
+    options,args=parser.parse_args()        
+
+if __name__=="__main__":
+    print len(sys.argv)
+    if len(sys.argv) == 4:
+        msg=MIMEMultipart()
+        Host = "smtp.xxx.com"
+
+        body=sys.argv[3]
+        To=sys.argv[1]
+        Subject=sys.argv[2]
+        compile=re.compile(r'host:(.*)')
+        host=compile.findall(body)[0].strip() 
+        key=raw_input('Please Input Key:')
+        imgpath=getpic(host,key)
+    
+        msgtext = MIMEText('<b>%s</b><br><img src="cid:cache"><br>' % body ,'html')
+        msg.attach(msgtext)
+        msg.attach(addimg(imgpath,"cache"))
+        msg['Subject']=Subject
+        msg['From']="yourmaiaddress"
+        msg['To']=To
+
+        From="yourmailaddress"
+        try:
+            server=smtplib.SMTP()
+            server.connect(Host,"25")
+            server.starttls()
+            server.login("yourmailaddress","password")
+            server.sendmail(From,To,msg.as_string())
+            server.quit()
+        except Exception as e:
+            print str(e)
+    else:
+        usage()
