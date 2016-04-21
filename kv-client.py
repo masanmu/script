@@ -22,7 +22,7 @@ def get_options():
 def kv_client(argvs,HOST,PORT):
     s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.connect((HOST,PORT))
-
+    count = 0
     if argvs:
         s.sendall(argvs.strip('\n'))
         data = s.recv(4096)
@@ -34,12 +34,16 @@ def kv_client(argvs,HOST,PORT):
                 if cmd == 'exit':
                     sys.exit(0)
                 elif cmd.split()[0].lower() == 'url':
-                    username = raw_input('Please input login username:').rstrip(' ')
-                    password = getpass.getpass('Passwd:').rstrip(' ')
+                    if count == 0:
+                        username = raw_input('Please input login username:').rstrip(' ')
+                        password = getpass.getpass('Passwd:').rstrip(' ')
+                    else:
+                        pass
                     cmd = 'url '+username+' '+password+' '+cmd
                     s.sendall(cmd)
                     token_code = s.recv(4096)
                     if token_code == str(1):
+                        count += 1
                         data = s.recv(4096)
                         print data
                     else:
