@@ -38,3 +38,4 @@ while 1:
 		data.append(info)
 	request = urllib2.Request("http://10.100.11.32:1988/v1/push",data=json.dumps(data))
         response = urllib2.urlopen(request)
+
