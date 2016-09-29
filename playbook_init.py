@@ -46,4 +46,3 @@ if __name__ == "__main__":
     for host in site_dict:
         with open(workspace+"/hosts","w+") as f:
             f.writelines("["+host["hosts"]+"]")
-        print host["hosts"]
