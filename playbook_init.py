@@ -24,25 +24,35 @@ if __name__ == "__main__":
         site = f.read()
 
     site_dict = yaml.load(site)
+
     ###########init roles###################################
     for host in site_dict:
-        for i in host["roles"]:
-            try:
-                role = i["role"]
-            except:
-                role = i
-            for path in common:
-                mkdir=workspace+"/"+"roles"+"/"+role+"/"+path
-                if not os.path.exists(mkdir):
-                    os.makedirs(mkdir)
-                    if path != "files" and path != "templates":
-                        os.mknod(mkdir+"/main.yml")
+        try:
+            for i in host["roles"]:
+                try:
+                    role = i["role"]
+                except:
+                    role = i
+                for path in common:
+                    mkdir=workspace+"/"+"roles"+"/"+role+"/"+path
+                    if not os.path.exists(mkdir):
+                        os.makedirs(mkdir)
+                        if path != "files" and path != "templates":
+                            os.mknod(mkdir+"/main.yml")
+        except:
+            os.mknod(workspace+"/"+host["include"]) 
+
     #############init variable################################
     vardir = workspace + "/group_vars/"
     if not os.path.exists(vardir):
         os.makedirs(vardir)
         os.mknod(vardir+"all")
+    
     #############init hosts###################################
     for host in site_dict:
-        with open(workspace+"/hosts","w+") as f:
-            f.writelines("["+host["hosts"]+"]")
+        try:
+            with open(workspace+"/hosts","a+") as f:
+                f.write("["+host["hosts"]+"]\n")
+                f.flush()
+        except:
+            pass
